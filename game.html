@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cleric Leveling Game - Minecraft Clerics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .game-area {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 30px 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Game card container */
+    .game-card {
+      background: rgba(30, 16, 64, 0.6);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(147, 51, 234, 0.2);
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .game-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.4), transparent);
+    }
+
+    /* Cleric display */
+    .cleric-display {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .cleric-display img {
+      height: 140px;
+      animation: gentle-bob 3s ease-in-out infinite;
+      filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.3));
+      transition: filter 0.3s;
+    }
+
+    .cleric-display.leveling img {
+      animation: level-up 0.6s ease-out;
+      filter: drop-shadow(0 0 40px rgba(251, 191, 36, 0.8));
+    }
+
+    @keyframes level-up {
+      0% { transform: scale(1); }
+      30% { transform: scale(1.3); }
+      60% { transform: scale(0.95); }
+      100% { transform: scale(1); }
+    }
+
+    .cleric-name {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.7rem;
+      color: #fff;
+      margin-top: 12px;
+    }
+
+    /* Level & XP bar */
+    .level-display {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .current-level {
+      display: inline-block;
+      padding: 6px 20px;
+      border-radius: 8px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.7rem;
+      margin-bottom: 12px;
+    }
+
+    .xp-bar-container {
+      background: rgba(10, 1, 24, 0.6);
+      border: 1px solid rgba(147, 51, 234, 0.2);
+      border-radius: 10px;
+      height: 28px;
+      width: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .xp-bar-fill {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.5s ease-out, background 0.3s;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .xp-bar-fill.level-1-bar { background: linear-gradient(90deg, #4b5563, #6b7280); }
+    .xp-bar-fill.level-2-bar { background: linear-gradient(90deg, #1d4ed8, #3b82f6); }
+    .xp-bar-fill.level-3-bar { background: linear-gradient(90deg, #6d28d9, #8b5cf6); }
+    .xp-bar-fill.level-4-bar { background: linear-gradient(90deg, #be185d, #ec4899); }
+    .xp-bar-fill.level-5-bar { background: linear-gradient(90deg, #b45309, #f59e0b); }
+
+    .xp-text {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.45rem;
+      color: #fff;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+      position: absolute;
+      width: 100%;
+      text-align: center;
+    }
+
+    /* Emerald counter */
+    .wallet {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 12px;
+      background: rgba(52, 211, 153, 0.08);
+      border: 1px solid rgba(52, 211, 153, 0.2);
+      border-radius: 10px;
+    }
+
+    .wallet img { height: 28px; }
+
+    .wallet .emerald-count {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 1.2rem;
+      color: var(--emerald);
+    }
+
+    .wallet .emerald-label {
+      font-size: 0.85rem;
+      color: #86dbb5;
+    }
+
+    /* Inventory */
+    .inventory {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 20px;
+      padding: 14px;
+      background: rgba(88, 28, 135, 0.08);
+      border: 1px solid rgba(147, 51, 234, 0.1);
+      border-radius: 10px;
+      min-height: 60px;
+    }
+
+    .inv-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(30, 16, 64, 0.6);
+      border: 1px solid rgba(147, 51, 234, 0.2);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 0.8rem;
+      color: #b8a8d4;
+    }
+
+    .inv-item img { height: 20px; }
+
+    /* Trade buttons */
+    .trades-section h3 {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.6rem;
+      color: #fff;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+
+    .trade-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .trade-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(88, 28, 135, 0.15);
+      border: 1px solid rgba(147, 51, 234, 0.2);
+      border-radius: 10px;
+      color: #cdc3e0;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+      text-align: left;
+    }
+
+    .trade-btn:hover:not(:disabled) {
+      background: rgba(88, 28, 135, 0.3);
+      border-color: rgba(147, 51, 234, 0.4);
+      transform: translateX(4px);
+    }
+
+    .trade-btn:active:not(:disabled) { transform: translateX(2px) scale(0.99); }
+
+    .trade-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .trade-btn img { height: 24px; flex-shrink: 0; }
+
+    .trade-btn .trade-arrow {
+      color: var(--purple-500);
+      font-weight: bold;
+      margin: 0 4px;
+    }
+
+    .trade-btn .trade-xp {
+      margin-left: auto;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.45rem;
+      color: var(--gold);
+      white-space: nowrap;
+    }
+
+    /* Gather button */
+    .gather-section {
+      text-align: center;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .gather-btn {
+      padding: 14px 30px;
+      background: linear-gradient(135deg, #065f46, #059669);
+      border: 2px solid rgba(52, 211, 153, 0.4);
+      border-radius: 12px;
+      color: #fff;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.65rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
+      line-height: 1.6;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .gather-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(5, 150, 105, 0.5);
+    }
+
+    .gather-btn:active:not(:disabled) {
+      transform: translateY(1px);
+      box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+    }
+
+    .gather-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.8;
+    }
+
+    /* Cooldown bar inside button */
+    .cooldown-bar {
+      position: absolute;
+      bottom: 0; left: 0;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 0 0 10px 10px;
+      transition: width 1.2s linear;
+    }
+
+    /* Gathering animation scene */
+    .gather-scene {
+      position: relative;
+      height: 80px;
+      margin-bottom: 14px;
+      border-radius: 10px;
+      background: rgba(10, 1, 24, 0.5);
+      border: 1px solid rgba(147, 51, 234, 0.1);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gather-scene .scene-text {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.5rem;
+      color: #5a4d73;
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    .gather-scene.active .scene-text { display: none; }
+
+    /* Animated character in scene */
+    .scene-character {
+      position: absolute;
+      height: 50px;
+      display: none;
+    }
+
+    .gather-scene.active .scene-character { display: block; }
+
+    /* Pickaxe swing animation */
+    .scene-tool {
+      position: absolute;
+      height: 28px;
+      display: none;
+      transform-origin: bottom right;
+    }
+
+    .gather-scene.active .scene-tool { display: block; animation: swing 0.3s ease-in-out infinite alternate; }
+
+    @keyframes swing {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(-40deg); }
+    }
+
+    /* Mob getting hit */
+    .scene-mob {
+      position: absolute;
+      height: 45px;
+      display: none;
+    }
+
+    .gather-scene.active .scene-mob { display: block; animation: mob-hit 0.4s ease-in-out infinite alternate; }
+
+    @keyframes mob-hit {
+      0% { transform: translateX(0) scale(1); opacity: 1; }
+      100% { transform: translateX(5px) scale(0.95); opacity: 0.7; }
+    }
+
+    /* Block breaking particles */
+    .break-particle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 1px;
+      animation: break-fly 0.8s ease-out forwards;
+      pointer-events: none;
+    }
+
+    @keyframes break-fly {
+      0% { opacity: 1; transform: translate(0, 0) scale(1); }
+      100% { opacity: 0; transform: translate(var(--bx), var(--by)) scale(0.3); }
+    }
+
+    /* Scene action label */
+    .scene-label {
+      position: absolute;
+      bottom: 6px;
+      left: 0; right: 0;
+      text-align: center;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.4rem;
+      color: var(--purple-300);
+      display: none;
+    }
+
+    .gather-scene.active .scene-label { display: block; }
+
+    /* Floating text for gains */
+    .float-text {
+      position: fixed;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.6rem;
+      pointer-events: none;
+      z-index: 9999;
+      animation: float-up 1.2s ease-out forwards;
+    }
+
+    @keyframes float-up {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-60px); }
+    }
+
+    @keyframes confetti-fall {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(105vh) rotate(720deg); opacity: 0.3; }
+    }
+
+    /* Level up popup */
+    .level-popup {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      animation: fade-in 0.3s;
+    }
+
+    .level-popup-inner {
+      background: linear-gradient(135deg, var(--dark-700), var(--dark-800));
+      border: 2px solid var(--gold);
+      border-radius: 16px;
+      padding: 40px;
+      text-align: center;
+      max-width: 400px;
+      box-shadow: 0 0 60px rgba(251, 191, 36, 0.3);
+      animation: pop-in 0.4s ease-out;
+    }
+
+    @keyframes pop-in {
+      0% { transform: scale(0.5); opacity: 0; }
+      70% { transform: scale(1.05); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .level-popup-inner h2 {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 1rem;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+
+    .level-popup-inner p {
+      color: #b8a8d4;
+      margin-bottom: 8px;
+    }
+
+    .level-popup-inner .new-trades {
+      color: var(--emerald);
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    .level-popup-inner button {
+      padding: 10px 28px;
+      background: linear-gradient(135deg, var(--purple-700), var(--purple-500));
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.6rem;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .level-popup-inner button:hover { transform: scale(1.05); }
+
+    /* Win screen */
+    .win-screen {
+      text-align: center;
+      padding: 40px;
+    }
+
+    .win-screen h2 {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 1.2rem;
+      color: var(--gold);
+      margin-bottom: 16px;
+    }
+
+    .win-screen p { color: #b8a8d4; margin-bottom: 10px; }
+
+    .win-screen .trophy {
+      font-size: 4rem;
+      margin: 20px 0;
+    }
+
+    .restart-btn {
+      padding: 12px 30px;
+      background: linear-gradient(135deg, var(--purple-700), var(--purple-500));
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.65rem;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: transform 0.2s;
+    }
+
+    .restart-btn:hover { transform: translateY(-2px); }
+
+    /* Locked trade */
+    .locked-label {
+      font-size: 0.7rem;
+      color: #5a4d73;
+      font-style: italic;
+    }
+
+    @media (max-width: 500px) {
+      .game-area { padding: 16px 10px; }
+      .game-card { padding: 20px 14px; }
+      .cleric-display img { height: 100px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-brand" href="index.html">CLERICS</a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="guide.html">Guide</a>
+    <a href="stats.html">Live Stats</a>
+    <a href="game.html" class="active">Mini Game</a>
+  </div>
+</nav>
+
+<div class="game-area" id="gameArea">
+
+  <!-- CLERIC -->
+  <div class="game-card">
+    <div class="cleric-display" id="clericDisplay">
+      <img id="clericImg" src="https://minecraft.wiki/images/Plains_Cleric.png" alt="Cleric">
+      <div class="cleric-name" id="clericName">Your Cleric</div>
+    </div>
+
+    <!-- LEVEL & XP -->
+    <div class="level-display">
+      <div class="current-level level-1" id="levelBadge">Novice</div>
+      <div class="xp-bar-container">
+        <div class="xp-bar-fill level-1-bar" id="xpBar" style="width: 0%">
+          <span class="xp-text" id="xpText">0 / 50 XP</span>
+        </div>
+        <span class="xp-text" id="xpTextBg">0 / 50 XP</span>
+      </div>
+    </div>
+
+    <!-- WALLET -->
+    <div class="wallet">
+      <img src="https://minecraft.wiki/images/Invicon_Emerald.png" alt="">
+      <span class="emerald-count" id="emeraldCount">0</span>
+      <span class="emerald-label">Emeralds</span>
+    </div>
+
+    <!-- INVENTORY -->
+    <div class="inventory" id="inventory">
+      <span style="color:#5a4d73; font-size:0.85rem;">Empty - gather some items!</span>
+    </div>
+  </div>
+
+  <!-- GATHER -->
+  <div class="game-card gather-section">
+    <div class="gather-scene" id="gatherScene">
+      <span class="scene-text">Click Gather to go on an expedition!</span>
+      <img class="scene-character" id="sceneChar" src="" alt="">
+      <img class="scene-tool" id="sceneTool" src="" alt="">
+      <img class="scene-mob" id="sceneMob" src="" alt="">
+      <div class="scene-label" id="sceneLabel"></div>
+    </div>
+    <button class="gather-btn" id="gatherBtn" onclick="gather()">
+      Gather Items
+      <div class="cooldown-bar" id="cooldownBar"></div>
+    </button>
+    <p style="margin-top:10px; font-size:0.82rem; color:#6b5a8e;">1.2s cooldown — more loot per gather</p>
+  </div>
+
+  <!-- TRADES -->
+  <div class="game-card trades-section" id="tradesSection">
+    <h3>Available Trades</h3>
+    <div class="trade-buttons" id="tradeButtons"></div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-items">
+    <img src="https://minecraft.wiki/images/Invicon_Emerald.png" alt="">
+    <img src="https://minecraft.wiki/images/ItemSprite_ender-pearl.png" alt="">
+    <img src="https://minecraft.wiki/images/BlockSprite_glowstone.png" alt="">
+  </div>
+  <p>Minecraft Clerics Guide &mdash; Not affiliated with Mojang Studios</p>
+</footer>
+
+<script>
+  // ===== GAME STATE =====
+  const state = {
+    level: 1,
+    xp: 0,
+    emeralds: 0,
+    inventory: {},
+    totalTrades: 0,
+  };
+
+  // ===== LEVEL CONFIG =====
+  const levels = [
+    { name: 'Novice',      xpNeeded: 50,  num: 1, cssLevel: 'level-1', barClass: 'level-1-bar' },
+    { name: 'Apprentice',  xpNeeded: 120, num: 2, cssLevel: 'level-2', barClass: 'level-2-bar' },
+    { name: 'Journeyman',  xpNeeded: 200, num: 3, cssLevel: 'level-3', barClass: 'level-3-bar' },
+    { name: 'Expert',      xpNeeded: 300, num: 4, cssLevel: 'level-4', barClass: 'level-4-bar' },
+    { name: 'Master',      xpNeeded: 400, num: 5, cssLevel: 'level-5', barClass: 'level-5-bar' },
+  ];
+
+  // ===== TRADE DEFINITIONS =====
+  const allTrades = [
+    // Novice
+    { level: 1, give: 'rotten_flesh', giveQty: 32, giveLabel: 'Rotten Flesh', giveImg: 'https://minecraft.wiki/images/ItemSprite_rotten-flesh.png',
+      get: 'emerald', getQty: 1, getLabel: 'Emerald', getImg: 'https://minecraft.wiki/images/Invicon_Emerald.png', xp: 12 },
+    { level: 1, give: 'emerald', giveQty: 1, giveLabel: 'Emerald', giveImg: 'https://minecraft.wiki/images/Invicon_Emerald.png',
+      get: 'redstone', getQty: 2, getLabel: 'Redstone', getImg: 'https://minecraft.wiki/images/ItemSprite_redstone-dust.png', xp: 10 },
+    // Apprentice
+    { level: 2, give: 'gold_ingot', giveQty: 3, giveLabel: 'Gold Ingots', giveImg: 'https://minecraft.wiki/images/ItemSprite_gold-ingot.png',
+      get: 'emerald', getQty: 1, getLabel: 'Emerald', getImg: 'https://minecraft.wiki/images/Invicon_Emerald.png', xp: 15 },
+    { level: 2, give: 'emerald', giveQty: 1, giveLabel: 'Emerald', giveImg: 'https://minecraft.wiki/images/Invicon_Emerald.png',
+      get: 'lapis', getQty: 1, getLabel: 'Lapis Lazuli', getImg: 'https://minecraft.wiki/images/ItemSprite_lapis-lazuli.png', xp: 12 },
+    // Journeyman
+    { level: 3, give: 'rabbit_foot', giveQty: 2, giveLabel: "Rabbit's Feet", giveImg: 'https://minecraft.wiki/images/ItemSprite_rabbit%27s-foot.png',
+      get: 'emerald', getQty: 1, getLabel: 'Emerald', getImg: 'https://minecraft.wiki/images/Invicon_Emerald.png', xp: 18 },
+    { level: 3, give: 'emerald', giveQty: 4, giveLabel: 'Emeralds', giveImg: 'https://minecraft.wiki/images/Invicon_Emerald.png',
+      get: 'glowstone', getQty: 1, getLabel: 'Glowstone', getImg: 'https://minecraft.wiki/images/BlockSprite_glowstone.png', xp: 20 },
+    // Expert
+    { level: 4, give: 'glass_bottle', giveQty: 9, giveLabel: 'Glass Bottles', giveImg: 'https://minecraft.wiki/images/Invicon_Glass_Bottle.png',
+      get: 'emerald', getQty: 1, getLabel: 'Emerald', getImg: 'https://minecraft.wiki/images/Invicon_Emerald.png', xp: 20 },
+    { level: 4, give: 'emerald', giveQty: 5, giveLabel: 'Emeralds', giveImg: 'https://minecraft.wiki/images/Invicon_Emerald.png',
+      get: 'ender_pearl', getQty: 1, getLabel: 'Ender Pearl', getImg: 'https://minecraft.wiki/images/ItemSprite_ender-pearl.png', xp: 25 },
+    // Master
+    { level: 5, give: 'nether_wart', giveQty: 22, giveLabel: 'Nether Wart', giveImg: 'https://minecraft.wiki/images/Invicon_Nether_Wart.png',
+      get: 'emerald', getQty: 1, getLabel: 'Emerald', getImg: 'https://minecraft.wiki/images/Invicon_Emerald.png', xp: 25 },
+    { level: 5, give: 'emerald', giveQty: 3, giveLabel: 'Emeralds', giveImg: 'https://minecraft.wiki/images/Invicon_Emerald.png',
+      get: 'xp_bottle', getQty: 1, getLabel: "Bottle o' Enchanting", getImg: 'https://minecraft.wiki/images/ItemSprite_bottle-o%27-enchanting.png', xp: 30 },
+  ];
+
+  // ===== GATHER LOOT TABLE (bigger drops) =====
+  const lootTable = [
+    { item: 'rotten_flesh', label: 'Rotten Flesh', img: 'https://minecraft.wiki/images/ItemSprite_rotten-flesh.png', qty: [8, 20], weight: 30 },
+    { item: 'gold_ingot', label: 'Gold Ingot', img: 'https://minecraft.wiki/images/ItemSprite_gold-ingot.png', qty: [2, 5], weight: 15 },
+    { item: 'rabbit_foot', label: "Rabbit's Foot", img: 'https://minecraft.wiki/images/ItemSprite_rabbit%27s-foot.png', qty: [1, 4], weight: 10 },
+    { item: 'glass_bottle', label: 'Glass Bottle', img: 'https://minecraft.wiki/images/Invicon_Glass_Bottle.png', qty: [5, 12], weight: 12 },
+    { item: 'nether_wart', label: 'Nether Wart', img: 'https://minecraft.wiki/images/Invicon_Nether_Wart.png', qty: [6, 15], weight: 8 },
+    { item: 'emerald', label: 'Emerald', img: 'https://minecraft.wiki/images/Invicon_Emerald.png', qty: [1, 3], weight: 5 },
+  ];
+
+  // ===== GATHER ANIMATIONS =====
+  const gatherAnimations = [
+    {
+      label: 'Mining Redstone...',
+      charImg: 'https://minecraft.wiki/images/ItemSprite_iron-pickaxe.png',
+      charPos: { left: '30%', top: '12px' },
+      toolImg: 'https://minecraft.wiki/images/ItemSprite_redstone-dust.png',
+      toolPos: { left: '55%', top: '20px' },
+      mobImg: null,
+      particles: '#ef4444',
+    },
+    {
+      label: 'Fighting Zombies...',
+      charImg: 'https://minecraft.wiki/images/ItemSprite_iron-sword.png',
+      charPos: { left: '25%', top: '14px' },
+      toolImg: null,
+      mobImg: 'https://minecraft.wiki/images/ItemSprite_rotten-flesh.png',
+      mobPos: { left: '58%', top: '16px' },
+      particles: '#6b8a3e',
+    },
+    {
+      label: 'Hunting Rabbits...',
+      charImg: 'https://minecraft.wiki/images/ItemSprite_bow.png',
+      charPos: { left: '22%', top: '14px' },
+      toolImg: null,
+      mobImg: 'https://minecraft.wiki/images/ItemSprite_rabbit%27s-foot.png',
+      mobPos: { left: '62%', top: '20px' },
+      particles: '#d4a76a',
+    },
+    {
+      label: 'Mining Gold...',
+      charImg: 'https://minecraft.wiki/images/ItemSprite_iron-pickaxe.png',
+      charPos: { left: '30%', top: '12px' },
+      toolImg: 'https://minecraft.wiki/images/ItemSprite_gold-ingot.png',
+      toolPos: { left: '55%', top: '18px' },
+      mobImg: null,
+      particles: '#fbbf24',
+    },
+    {
+      label: 'Harvesting Nether Wart...',
+      charImg: 'https://minecraft.wiki/images/Invicon_Nether_Wart.png',
+      charPos: { left: '28%', top: '14px' },
+      toolImg: 'https://minecraft.wiki/images/BlockSprite_soul-sand.png',
+      toolPos: { left: '55%', top: '24px' },
+      mobImg: null,
+      particles: '#7f1d1d',
+    },
+    {
+      label: 'Crafting Glass Bottles...',
+      charImg: 'https://minecraft.wiki/images/Invicon_Glass_Bottle.png',
+      charPos: { left: '35%', top: '14px' },
+      toolImg: 'https://minecraft.wiki/images/BlockSprite_furnace.png',
+      toolPos: { left: '55%', top: '16px' },
+      mobImg: null,
+      particles: '#93c5fd',
+    },
+  ];
+
+  // ===== DOM REFS =====
+  const levelBadge = document.getElementById('levelBadge');
+  const xpBar = document.getElementById('xpBar');
+  const xpText = document.getElementById('xpText');
+  const xpTextBg = document.getElementById('xpTextBg');
+  const emeraldCountEl = document.getElementById('emeraldCount');
+  const inventoryEl = document.getElementById('inventory');
+  const tradeButtonsEl = document.getElementById('tradeButtons');
+  const clericDisplay = document.getElementById('clericDisplay');
+  const gatherBtn = document.getElementById('gatherBtn');
+
+  // ===== GATHER FUNCTION =====
+  let gatherCooldown = false;
+  const gatherScene = document.getElementById('gatherScene');
+  const sceneChar = document.getElementById('sceneChar');
+  const sceneTool = document.getElementById('sceneTool');
+  const sceneMob = document.getElementById('sceneMob');
+  const sceneLabel = document.getElementById('sceneLabel');
+  const cooldownBar = document.getElementById('cooldownBar');
+  let particleInterval = null;
+
+  function gather() {
+    if (gatherCooldown) return;
+    gatherCooldown = true;
+    gatherBtn.disabled = true;
+    gatherBtn.childNodes[0].textContent = 'Gathering... ';
+
+    // Start cooldown bar animation
+    cooldownBar.style.transition = 'none';
+    cooldownBar.style.width = '100%';
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        cooldownBar.style.transition = 'width 1.2s linear';
+        cooldownBar.style.width = '0%';
+      });
+    });
+
+    // Pick a random animation scene
+    const anim = gatherAnimations[Math.floor(Math.random() * gatherAnimations.length)];
+    gatherScene.classList.add('active');
+    sceneLabel.textContent = anim.label;
+
+    // Set up character
+    sceneChar.src = anim.charImg;
+    sceneChar.style.left = anim.charPos.left;
+    sceneChar.style.top = anim.charPos.top;
+    sceneChar.style.display = 'block';
+
+    // Set up tool/block (for mining scenes)
+    if (anim.toolImg) {
+      sceneTool.src = anim.toolImg;
+      sceneTool.style.left = anim.toolPos.left;
+      sceneTool.style.top = anim.toolPos.top;
+      sceneTool.style.display = 'block';
+    } else {
+      sceneTool.style.display = 'none';
+    }
+
+    // Set up mob (for fighting scenes)
+    if (anim.mobImg) {
+      sceneMob.src = anim.mobImg;
+      sceneMob.style.left = anim.mobPos.left;
+      sceneMob.style.top = anim.mobPos.top;
+      sceneMob.style.display = 'block';
+    } else {
+      sceneMob.style.display = 'none';
+    }
+
+    // Spawn break particles during animation
+    particleInterval = setInterval(() => {
+      spawnBreakParticle(anim.particles);
+    }, 150);
+
+    // After exactly 1.2 seconds — give loot
+    setTimeout(() => {
+      clearInterval(particleInterval);
+      gatherScene.classList.remove('active');
+      sceneChar.style.display = 'none';
+      sceneTool.style.display = 'none';
+      sceneMob.style.display = 'none';
+
+      // Pick 2-4 random items (more loot!)
+      const numItems = Math.floor(Math.random() * 3) + 2;
+      for (let i = 0; i < numItems; i++) {
+        const loot = weightedRandom(lootTable);
+        const qty = randRange(loot.qty[0], loot.qty[1]);
+
+        if (loot.item === 'emerald') {
+          state.emeralds += qty;
+        } else {
+          state.inventory[loot.item] = (state.inventory[loot.item] || 0) + qty;
+        }
+
+        // Stagger the float texts
+        setTimeout(() => {
+          showFloatText(`+${qty} ${loot.label}`, loot.item === 'emerald' ? '#34d399' : '#d8b4fe');
+        }, i * 200);
+      }
+
+      updateUI();
+      gatherBtn.childNodes[0].textContent = 'Gather Items ';
+      gatherBtn.disabled = false;
+      gatherCooldown = false;
+    }, 1200);
+  }
+
+  function spawnBreakParticle(color) {
+    const scene = document.getElementById('gatherScene');
+    const rect = scene.getBoundingClientRect();
+    const p = document.createElement('div');
+    p.className = 'break-particle';
+    p.style.background = color;
+    p.style.left = (40 + Math.random() * 30) + '%';
+    p.style.top = (20 + Math.random() * 40) + '%';
+    p.style.setProperty('--bx', (Math.random() * 40 - 20) + 'px');
+    p.style.setProperty('--by', (Math.random() * -30 - 10) + 'px');
+    scene.appendChild(p);
+    setTimeout(() => p.remove(), 800);
+  }
+
+  // ===== TRADE FUNCTION =====
+  function doTrade(index) {
+    const trade = allTrades[index];
+    if (trade.level > state.level) return;
+
+    // Check if player has enough
+    if (trade.give === 'emerald') {
+      if (state.emeralds < trade.giveQty) return;
+      state.emeralds -= trade.giveQty;
+    } else {
+      if ((state.inventory[trade.give] || 0) < trade.giveQty) return;
+      state.inventory[trade.give] -= trade.giveQty;
+      if (state.inventory[trade.give] <= 0) delete state.inventory[trade.give];
+    }
+
+    // Give reward
+    if (trade.get === 'emerald') {
+      state.emeralds += trade.getQty;
+    } else {
+      state.inventory[trade.get] = (state.inventory[trade.get] || 0) + trade.getQty;
+    }
+
+    // Add XP
+    state.xp += trade.xp;
+    state.totalTrades++;
+
+    showFloatText(`+${trade.xp} XP`, '#fbbf24');
+
+    // Check level up
+    const currentLevel = levels[state.level - 1];
+    if (state.xp >= currentLevel.xpNeeded && state.level < 5) {
+      state.xp = 0;
+      state.level++;
+      showLevelUpPopup();
+    }
+
+    // Check win
+    if (state.level === 5 && state.xp >= levels[4].xpNeeded) {
+      showWinScreen();
+      return;
+    }
+
+    updateUI();
+  }
+
+  // ===== UI UPDATE =====
+  function updateUI() {
+    const lvl = levels[state.level - 1];
+
+    // Level badge
+    levelBadge.textContent = lvl.name;
+    levelBadge.className = `current-level level-badge ${lvl.cssLevel}`;
+
+    // XP bar
+    const pct = Math.min((state.xp / lvl.xpNeeded) * 100, 100);
+    xpBar.style.width = pct + '%';
+    xpBar.className = `xp-bar-fill ${lvl.barClass}`;
+    const xpStr = `${state.xp} / ${lvl.xpNeeded} XP`;
+    xpText.textContent = xpStr;
+    xpTextBg.textContent = xpStr;
+
+    // Emeralds
+    emeraldCountEl.textContent = state.emeralds;
+
+    // Inventory
+    const items = Object.entries(state.inventory).filter(([k, v]) => v > 0);
+    if (items.length === 0) {
+      inventoryEl.innerHTML = '<span style="color:#5a4d73; font-size:0.85rem;">Empty - gather some items!</span>';
+    } else {
+      inventoryEl.innerHTML = items.map(([key, qty]) => {
+        const loot = lootTable.find(l => l.item === key) || allTrades.find(t => t.get === key);
+        const img = loot ? (loot.img || loot.getImg) : '';
+        const label = loot ? (loot.label || loot.getLabel) : key;
+        return `<div class="inv-item"><img src="${img}" alt=""> ${qty} ${label}</div>`;
+      }).join('');
+    }
+
+    // Trade buttons
+    renderTrades();
+  }
+
+  function renderTrades() {
+    tradeButtonsEl.innerHTML = '';
+
+    allTrades.forEach((trade, i) => {
+      if (trade.level > state.level) {
+        // Show locked
+        if (trade.level === state.level + 1) {
+          const btn = document.createElement('button');
+          btn.className = 'trade-btn';
+          btn.disabled = true;
+          btn.innerHTML = `<span class="locked-label">Unlocks at ${levels[trade.level - 1].name}...</span>`;
+          tradeButtonsEl.appendChild(btn);
+          // Only show first locked pair
+          if (allTrades[i-1] && allTrades[i-1].level === trade.level) return;
+        }
+        return;
+      }
+
+      const canAfford = trade.give === 'emerald'
+        ? state.emeralds >= trade.giveQty
+        : (state.inventory[trade.give] || 0) >= trade.giveQty;
+
+      const btn = document.createElement('button');
+      btn.className = 'trade-btn';
+      btn.disabled = !canAfford;
+      btn.onclick = () => doTrade(i);
+      btn.innerHTML = `
+        <img src="${trade.giveImg}" alt=""> ${trade.giveQty} ${trade.giveLabel}
+        <span class="trade-arrow">&rarr;</span>
+        <img src="${trade.getImg}" alt=""> ${trade.getQty} ${trade.getLabel}
+        <span class="trade-xp">+${trade.xp} XP</span>
+      `;
+      tradeButtonsEl.appendChild(btn);
+    });
+  }
+
+  // ===== LEVEL UP POPUP =====
+  function showLevelUpPopup() {
+    const lvl = levels[state.level - 1];
+    clericDisplay.classList.add('leveling');
+    setTimeout(() => clericDisplay.classList.remove('leveling'), 600);
+
+    const popup = document.createElement('div');
+    popup.className = 'level-popup';
+    popup.innerHTML = `
+      <div class="level-popup-inner">
+        <h2>LEVEL UP!</h2>
+        <p>Your Cleric is now a</p>
+        <p><span class="level-badge ${lvl.cssLevel}" style="font-size:0.8rem; padding:6px 16px;">${lvl.name}</span></p>
+        <p class="new-trades" style="margin-top:14px;">New trades unlocked!</p>
+        <button onclick="this.parentElement.parentElement.remove()">Continue</button>
+      </div>
+    `;
+    document.body.appendChild(popup);
+    updateUI();
+  }
+
+  // ===== WIN SCREEN =====
+  function showWinScreen() {
+    // Big popup first
+    const popup = document.createElement('div');
+    popup.className = 'level-popup';
+    popup.innerHTML = `
+      <div class="level-popup-inner" style="border-color: var(--gold); max-width: 460px;">
+        <div style="font-size: 3rem; margin-bottom: 10px;">
+          <img src="https://minecraft.wiki/images/Plains_Cleric.png" alt="" style="height:100px;filter:drop-shadow(0 0 30px rgba(251,191,36,0.8));animation:gentle-bob 2s ease-in-out infinite;">
+        </div>
+        <h2 style="font-size: 1.4rem; margin-bottom: 16px;">YAY U WON!!!</h2>
+        <p style="color: var(--gold); font-size: 1.1rem; font-weight: 700; margin-bottom: 6px;">MASTER CLERIC UNLOCKED!</p>
+        <p>You leveled your Cleric all the way to Master!</p>
+        <p style="color:var(--emerald); font-weight:600; font-size:1rem; margin-top:14px;">${state.totalTrades} trades completed</p>
+        <p style="color:#6b5a8e; margin-top:4px;">${state.emeralds} Emeralds remaining</p>
+        <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+          <button onclick="this.parentElement.parentElement.parentElement.remove()" style="padding:10px 24px;background:linear-gradient(135deg,var(--purple-700),var(--purple-500));border:none;border-radius:8px;color:#fff;font-family:'Press Start 2P',cursive;font-size:0.5rem;cursor:pointer;">View Stats</button>
+          <button onclick="location.reload()" style="padding:10px 24px;background:linear-gradient(135deg,#b45309,#f59e0b);border:none;border-radius:8px;color:#fff;font-family:'Press Start 2P',cursive;font-size:0.5rem;cursor:pointer;">Play Again</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(popup);
+
+    // Spawn a bunch of celebration particles
+    spawnCelebration();
+
+    // Replace game area with win screen behind popup
+    document.getElementById('gameArea').innerHTML = `
+      <div class="game-card win-screen">
+        <div class="trophy"><img src="https://minecraft.wiki/images/Plains_Cleric.png" alt="" style="height:160px;filter:drop-shadow(0 0 40px rgba(251,191,36,0.6));animation:gentle-bob 3s ease-in-out infinite;"></div>
+        <h2>YAY U WON!!!</h2>
+        <p style="font-size:1.1rem;">You fully maxed out your Cleric to <span class="level-badge level-5" style="font-size:0.7rem; padding:4px 12px;">Master</span></p>
+        <p style="color:var(--emerald); font-weight:600; font-size:1.1rem; margin-top:14px;">${state.totalTrades} trades completed</p>
+        <p style="color:#6b5a8e; margin-top:6px;">${state.emeralds} Emeralds remaining</p>
+        <button class="restart-btn" onclick="location.reload()">Play Again</button>
+      </div>
+    `;
+  }
+
+  // ===== CELEBRATION PARTICLES =====
+  function spawnCelebration() {
+    const colors = ['#fbbf24', '#34d399', '#c084fc', '#f87171', '#60a5fa', '#fbbf24'];
+    for (let i = 0; i < 60; i++) {
+      setTimeout(() => {
+        const p = document.createElement('div');
+        p.style.cssText = `
+          position: fixed;
+          width: ${Math.random() * 8 + 4}px;
+          height: ${Math.random() * 8 + 4}px;
+          background: ${colors[Math.floor(Math.random() * colors.length)]};
+          border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+          left: ${Math.random() * 100}%;
+          top: -10px;
+          z-index: 10001;
+          pointer-events: none;
+          animation: confetti-fall ${Math.random() * 2 + 2}s ease-in forwards;
+        `;
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 4000);
+      }, i * 50);
+    }
+  }
+
+  // ===== HELPERS =====
+  function weightedRandom(table) {
+    const total = table.reduce((s, l) => s + l.weight, 0);
+    let r = Math.random() * total;
+    for (const item of table) {
+      r -= item.weight;
+      if (r <= 0) return item;
+    }
+    return table[0];
+  }
+
+  function randRange(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function showFloatText(text, color) {
+    const el = document.createElement('div');
+    el.className = 'float-text';
+    el.textContent = text;
+    el.style.color = color;
+    el.style.left = (Math.random() * 40 + 30) + '%';
+    el.style.top = '35%';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1200);
+  }
+
+  // ===== INIT =====
+  updateUI();
+</script>
+
+<!-- Particles -->
+<script>
+  const colors = [
+    'rgba(52, 211, 153, 0.6)',
+    'rgba(251, 191, 36, 0.5)',
+    'rgba(168, 85, 247, 0.5)',
+    'rgba(59, 130, 246, 0.4)',
+    'rgba(239, 68, 68, 0.4)',
+  ];
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 35; i++) {
+    const el = document.createElement('div');
+    el.classList.add('particle');
+    const c = colors[Math.floor(Math.random() * colors.length)];
+    const s = Math.random() * 4 + 2;
+    el.style.cssText = `width:${s}px;height:${s}px;left:${Math.random()*100}%;background:${c};box-shadow:0 0 ${s*2}px ${c};animation-duration:${Math.random()*15+10}s;animation-delay:${Math.random()*10}s;`;
+    container.appendChild(el);
+  }
+</script>
+
+</body>
+</html>

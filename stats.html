@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Stats - Minecraft Clerics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .stats-hero {
+      position: relative;
+      text-align: center;
+      padding: 50px 20px 40px;
+      background:
+        radial-gradient(ellipse at 50% 90%, rgba(52, 211, 153, 0.1) 0%, transparent 60%),
+        linear-gradient(180deg, var(--dark-950) 0%, var(--dark-800) 100%);
+      border-bottom: 1px solid rgba(147, 51, 234, 0.2);
+      z-index: 1;
+    }
+
+    .stats-hero::before {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--purple-500), transparent);
+    }
+
+    .stats-hero h1 {
+      font-family: 'Press Start 2P', cursive;
+      font-size: clamp(1.2rem, 3.5vw, 1.8rem);
+      color: #fff;
+      text-shadow: 0 0 40px rgba(168, 85, 247, 0.4);
+      margin-bottom: 12px;
+      line-height: 1.6;
+    }
+
+    .stats-hero p {
+      color: #9a8cb8;
+      font-size: 1.1rem;
+    }
+
+    /* Live indicator */
+    .live-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      background: #34d399;
+      border-radius: 50%;
+      margin-right: 8px;
+      animation: pulse-dot 2s ease-in-out infinite;
+      vertical-align: middle;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.5); }
+      50% { box-shadow: 0 0 0 8px rgba(52, 211, 153, 0); }
+    }
+
+    /* Big counter */
+    .big-counter {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 50px 20px;
+      margin-bottom: 24px;
+      background: rgba(30, 16, 64, 0.5);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(52, 211, 153, 0.2);
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .big-counter::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(52, 211, 153, 0.5), transparent);
+    }
+
+    .big-counter .label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #9a8cb8;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 16px;
+    }
+
+    .big-counter .label .live-dot { margin-right: 6px; }
+
+    .big-counter .number {
+      font-family: 'Press Start 2P', cursive;
+      font-size: clamp(3rem, 10vw, 5rem);
+      color: var(--emerald);
+      text-shadow: 0 0 40px rgba(52, 211, 153, 0.4);
+      transition: transform 0.3s;
+    }
+
+    .big-counter .sub-label {
+      margin-top: 12px;
+      color: #6b5a8e;
+      font-size: 0.85rem;
+    }
+
+    /* Smaller stat boxes */
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .mini-stat {
+      background: rgba(30, 16, 64, 0.5);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(147, 51, 234, 0.15);
+      border-radius: 14px;
+      padding: 28px 20px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+
+    .mini-stat:hover { border-color: rgba(147, 51, 234, 0.35); }
+
+    .mini-stat::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.3), transparent);
+    }
+
+    .mini-stat .mini-icon {
+      height: 28px;
+      margin-bottom: 12px;
+    }
+
+    .mini-stat .mini-number {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 1.5rem;
+      color: var(--purple-300);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .mini-stat .mini-label {
+      font-size: 0.82rem;
+      color: #7a6b96;
+      font-weight: 500;
+    }
+
+    /* Activity feed */
+    .activity-card {
+      background: rgba(30, 16, 64, 0.5);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(147, 51, 234, 0.15);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .activity-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.3), transparent);
+    }
+
+    .activity-card h2 {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.75rem;
+      color: #fff;
+      margin-bottom: 18px;
+    }
+
+    .activity-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .activity-list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      margin-bottom: 6px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: #b8a8d4;
+      background: rgba(88, 28, 135, 0.06);
+      border: 1px solid rgba(147, 51, 234, 0.06);
+      animation: fade-in 0.5s ease-out;
+    }
+
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .activity-list li img { height: 20px; }
+
+    .activity-list .time {
+      margin-left: auto;
+      font-size: 0.75rem;
+      color: #5a4d73;
+    }
+
+    .no-activity {
+      text-align: center;
+      padding: 30px;
+      color: #5a4d73;
+      font-size: 0.9rem;
+    }
+
+    /* Connection status */
+    .connection-bar {
+      text-align: center;
+      padding: 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .connection-bar.connected {
+      background: rgba(52, 211, 153, 0.1);
+      color: var(--emerald);
+      border-bottom: 1px solid rgba(52, 211, 153, 0.2);
+    }
+
+    .connection-bar.disconnected {
+      background: rgba(239, 68, 68, 0.1);
+      color: #f87171;
+      border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .connection-bar.connecting {
+      background: rgba(251, 191, 36, 0.1);
+      color: var(--gold);
+      border-bottom: 1px solid rgba(251, 191, 36, 0.2);
+    }
+  </style>
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-brand" href="index.html">CLERICS</a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="guide.html">Guide</a>
+    <a href="stats.html" class="active">Live Stats</a>
+  </div>
+</nav>
+
+<!-- CONNECTION STATUS -->
+<div class="connection-bar connecting" id="connectionBar">Connecting...</div>
+
+<!-- HERO -->
+<section class="stats-hero">
+  <h1><span class="live-dot"></span> LIVE STATS</h1>
+  <p>See who's visiting the Minecraft Clerics guide right now</p>
+</section>
+
+<div class="container">
+
+  <!-- CURRENTLY ONLINE -->
+  <div class="big-counter">
+    <div class="label"><span class="live-dot"></span> Currently Online</div>
+    <div class="number" id="onlineCount">0</div>
+    <div class="sub-label">people viewing the site right now</div>
+  </div>
+
+  <!-- MINI STATS -->
+  <div class="mini-stats">
+    <div class="mini-stat">
+      <img class="mini-icon" src="https://minecraft.wiki/images/Invicon_Emerald.png" alt="">
+      <span class="mini-number" id="totalVisits">0</span>
+      <span class="mini-label">Total Visits</span>
+    </div>
+    <div class="mini-stat">
+      <img class="mini-icon" src="https://minecraft.wiki/images/ItemSprite_ender-pearl.png" alt="">
+      <span class="mini-number" id="todayVisits">0</span>
+      <span class="mini-label">Visits Today</span>
+    </div>
+    <div class="mini-stat">
+      <img class="mini-icon" src="https://minecraft.wiki/images/BlockSprite_glowstone.png" alt="">
+      <span class="mini-number" id="peakOnline">0</span>
+      <span class="mini-label">Peak Online</span>
+    </div>
+  </div>
+
+  <!-- RECENT ACTIVITY -->
+  <div class="activity-card">
+    <h2>Recent Activity</h2>
+    <ul class="activity-list" id="activityList">
+      <li class="no-activity">Waiting for visitors...</li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-items">
+    <img src="https://minecraft.wiki/images/Invicon_Emerald.png" alt="">
+    <img src="https://minecraft.wiki/images/ItemSprite_ender-pearl.png" alt="">
+    <img src="https://minecraft.wiki/images/BlockSprite_glowstone.png" alt="">
+  </div>
+  <p>Minecraft Clerics Guide &mdash; Not affiliated with Mojang Studios</p>
+  <p style="margin-top:6px;"><a href="index.html">&larr; Back to Home</a></p>
+</footer>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<script>
+  // ========================================
+  // PASTE YOUR FIREBASE CONFIG BELOW
+  // ========================================
+  const firebaseConfig = {
+    apiKey: "PASTE_HERE",
+    authDomain: "PASTE_HERE",
+    databaseURL: "PASTE_HERE",
+    projectId: "PASTE_HERE",
+    storageBucket: "PASTE_HERE",
+    messagingSenderId: "PASTE_HERE",
+    appId: "PASTE_HERE"
+  };
+  // ========================================
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  const connectionBar = document.getElementById('connectionBar');
+  const onlineCountEl = document.getElementById('onlineCount');
+  const totalVisitsEl = document.getElementById('totalVisits');
+  const todayVisitsEl = document.getElementById('todayVisits');
+  const peakOnlineEl = document.getElementById('peakOnline');
+  const activityListEl = document.getElementById('activityList');
+
+  // Get today's date key
+  function getTodayKey() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  // Random visitor name
+  function getVisitorName() {
+    const names = [
+      'Steve', 'Alex', 'Zombie', 'Creeper', 'Enderman', 'Villager',
+      'Witch', 'Pillager', 'Wanderer', 'Hero', 'Crafter', 'Miner',
+      'Explorer', 'Builder', 'Alchemist', 'Enchanter', 'Brewer'
+    ];
+    return names[Math.floor(Math.random() * names.length)] + '#' + Math.floor(Math.random() * 9999);
+  }
+
+  const visitorName = getVisitorName();
+  const todayKey = getTodayKey();
+
+  // === PRESENCE SYSTEM ===
+  const myPresenceRef = db.ref('presence/' + Date.now() + '-' + Math.random().toString(36).substr(2,5));
+  const connectedRef = db.ref('.info/connected');
+
+  connectedRef.on('value', (snap) => {
+    if (snap.val() === true) {
+      connectionBar.textContent = 'Connected - Live';
+      connectionBar.className = 'connection-bar connected';
+
+      myPresenceRef.set({ name: visitorName, time: firebase.database.ServerValue.TIMESTAMP });
+      myPresenceRef.onDisconnect().remove();
+    } else {
+      connectionBar.textContent = 'Reconnecting...';
+      connectionBar.className = 'connection-bar disconnected';
+    }
+  });
+
+  // === LISTEN: ONLINE COUNT ===
+  db.ref('presence').on('value', (snap) => {
+    const count = snap.numChildren();
+    onlineCountEl.textContent = count;
+
+    // Update peak
+    db.ref('peak').once('value', (peakSnap) => {
+      const currentPeak = peakSnap.val() || 0;
+      if (count > currentPeak) {
+        db.ref('peak').set(count);
+      }
+    });
+  });
+
+  // === TRACK VISIT ===
+  db.ref('totalVisits').transaction((current) => (current || 0) + 1);
+  db.ref('dailyVisits/' + todayKey).transaction((current) => (current || 0) + 1);
+
+  // === LISTEN: TOTAL VISITS ===
+  db.ref('totalVisits').on('value', (snap) => {
+    totalVisitsEl.textContent = snap.val() || 0;
+  });
+
+  // === LISTEN: TODAY VISITS ===
+  db.ref('dailyVisits/' + todayKey).on('value', (snap) => {
+    todayVisitsEl.textContent = snap.val() || 0;
+  });
+
+  // === LISTEN: PEAK ===
+  db.ref('peak').on('value', (snap) => {
+    peakOnlineEl.textContent = snap.val() || 0;
+  });
+
+  // === ACTIVITY FEED ===
+  const activityRef = db.ref('activity');
+
+  // Log this visit
+  activityRef.push({
+    name: visitorName,
+    action: 'joined',
+    time: firebase.database.ServerValue.TIMESTAMP
+  });
+
+  // Keep only last 20 activities
+  activityRef.limitToLast(20).on('child_added', (snap) => {
+    const data = snap.val();
+    const noActivity = activityListEl.querySelector('.no-activity');
+    if (noActivity) noActivity.remove();
+
+    const li = document.createElement('li');
+    const icons = [
+      'https://minecraft.wiki/images/Invicon_Emerald.png',
+      'https://minecraft.wiki/images/ItemSprite_ender-pearl.png',
+      'https://minecraft.wiki/images/BlockSprite_glowstone.png',
+      'https://minecraft.wiki/images/ItemSprite_redstone-dust.png',
+      'https://minecraft.wiki/images/ItemSprite_lapis-lazuli.png',
+    ];
+    const icon = icons[Math.floor(Math.random() * icons.length)];
+
+    const timeAgo = data.time ? getTimeAgo(data.time) : 'just now';
+    li.innerHTML = `<img src="${icon}" alt=""> <strong style="color:#d8b4fe;">${data.name}</strong> ${data.action} <span class="time">${timeAgo}</span>`;
+    activityListEl.prepend(li);
+
+    // Keep list short in DOM
+    while (activityListEl.children.length > 15) {
+      activityListEl.removeChild(activityListEl.lastChild);
+    }
+  });
+
+  function getTimeAgo(timestamp) {
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    if (seconds < 5) return 'just now';
+    if (seconds < 60) return seconds + 's ago';
+    if (seconds < 3600) return Math.floor(seconds/60) + 'm ago';
+    if (seconds < 86400) return Math.floor(seconds/3600) + 'h ago';
+    return Math.floor(seconds/86400) + 'd ago';
+  }
+
+  // Clean up old activity entries (older than 24h)
+  activityRef.orderByChild('time').endAt(Date.now() - 86400000).once('value', (snap) => {
+    snap.forEach((child) => child.ref.remove());
+  });
+</script>
+
+<!-- Particles -->
+<script>
+  const colors = [
+    'rgba(52, 211, 153, 0.6)',
+    'rgba(251, 191, 36, 0.5)',
+    'rgba(168, 85, 247, 0.5)',
+    'rgba(59, 130, 246, 0.4)',
+    'rgba(239, 68, 68, 0.4)',
+  ];
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 35; i++) {
+    const el = document.createElement('div');
+    el.classList.add('particle');
+    const c = colors[Math.floor(Math.random() * colors.length)];
+    const s = Math.random() * 4 + 2;
+    el.style.cssText = `width:${s}px;height:${s}px;left:${Math.random()*100}%;background:${c};box-shadow:0 0 ${s*2}px ${c};animation-duration:${Math.random()*15+10}s;animation-delay:${Math.random()*10}s;`;
+    container.appendChild(el);
+  }
+</script>
+
+</body>
+</html>
